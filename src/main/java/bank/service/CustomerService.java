@@ -58,6 +58,7 @@ public class CustomerService {
                 existente.id(),
                 dadosNovos.nome(),
                 dadosNovos.cpf(),
+                dadosNovos.balance(),
                 dadosNovos.email(),
                 existente.criadoEm()
         );

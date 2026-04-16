@@ -1,11 +1,15 @@
 package bank.util;
 
 import bank.model.Customer;
+
+import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class JsonUtil {
@@ -18,6 +22,7 @@ public class JsonUtil {
      *   "id": "abc-123",
      *   "nome": "Leonardo",
      *   "cpf": "12345678901",
+     *   "balance": "212,00"
      *   "email": "leo@email.com",
      *   "criadoEm": "2025-01-15T10:30:00"
      * }
@@ -28,12 +33,14 @@ public class JsonUtil {
               "id": %s,
               "nome": %s,
               "cpf": %s,
+              "balance": %s,
               "email": %s,
               "criadoEm": %s
             }""".formatted(
                 quote(c.id()),
                 quote(c.nome()),
                 quote(c.cpf()),
+                quote(String.valueOf(c.balance())),
                 quote(c.email()),
                 quote(c.criadoEm())
         );
@@ -56,10 +63,14 @@ public class JsonUtil {
      * Sim, é manual. Sim, funciona. Sim, é proposital.
      */
     public static Customer fromJson(String json) {
-        String nome  = extractField(json, "nome");
-        String cpf   = extractField(json, "cpf");
-        String email = extractField(json, "email");
-        return new Customer(nome, cpf, email);
+        String nome         = extractField(json, "nome");
+        String cpf          = extractField(json, "cpf");
+        String balanceStr      = extractField(json, "balance");
+        BigDecimal balance  = (balanceStr != null && !balanceStr.isEmpty())
+                                                    ? new BigDecimal(balanceStr)
+                                                    : BigDecimal.ZERO;
+        String email        = extractField(json, "email");
+        return new Customer(nome, cpf, balance, email);
     }
 
     /**
@@ -75,9 +86,15 @@ public class JsonUtil {
                 params.put(key.toLowerCase(), value);
             }
         }
+        String balanceStr = params.get("balance");
+        BigDecimal balance  = (balanceStr != null && !balanceStr.isEmpty())
+                ? new BigDecimal(balanceStr)
+                : BigDecimal.ZERO;
+
         return new Customer(
                 params.get("nome"),
                 params.get("cpf"),
+                balance,
                 params.get("email")
         );
     }
@@ -96,12 +113,12 @@ public class JsonUtil {
         // 4. Espaços arbitrários
         
         String pattern = "(?i)[\"']?" + field + "[\"']?\\s*:\\s*[\"']";
-        java.util.regex.Pattern r = java.util.regex.Pattern.compile(pattern);
-        java.util.regex.Matcher m = r.matcher(json);
+        Pattern fieldPattern = Pattern.compile(pattern);
+        Matcher matcher = fieldPattern.matcher(json);
         
-        if (!m.find()) return null;
+        if (!matcher.find()) return null;
         
-        int start = m.end();
+        int start = matcher.end();
         // O valor termina na mesma aspa (simples ou dupla) que começou
         char quote = json.charAt(start - 1);
         int end = json.indexOf(quote, start);
