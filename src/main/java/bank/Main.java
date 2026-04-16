@@ -10,25 +10,25 @@ import com.sun.net.httpserver.HttpServer;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        // 1. Camada de dados
+        // 1. Data layer
         CustomerRepository repository = new CustomerRepository();
 
-        // 2. Camada de negócio
+        // 2. Business layer
         CustomerService service = new CustomerService(repository);
 
-        // 3. Camada de apresentação
+        // 3. Presentation layer
         CustomerController controller = new CustomerController(service);
 
-        // 4. Infraestrutura
+        // 4. Infrastructure
         Router router = new Router(controller);
         HttpServer server = HttpServerFactory.create(router);
 
-        // 5. Inicia o servidor
+        // 5. Start the server
         server.start();
 
         System.out.println("===================================");
         System.out.println("  opnbank v0.1.0");
-        System.out.println("  Servidor rodando em :8080");
+        System.out.println("  Server running on :8080");
         System.out.println("===================================");
     }
 }

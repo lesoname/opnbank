@@ -5,31 +5,31 @@ import java.time.format.DateTimeFormatter;
 import java.math.BigDecimal;
 
 /**
-  Record que representa um Customer do banco.
-  Campos:
-    id        → identificador único (UUID como String)
-    nome      → nome completo
-    cpf       → CPF (sem formatação, apenas dígitos)
-    big       → balance
-    email     → endereço de e-mail
-    criadoEm  → data/hora de criação (ISO 8601)
+  Record representing a bank Customer.
+  Fields:
+    id        → unique identifier (UUID as String)
+    name      → full name
+    cpf       → CPF (unformatted, digits only)
+    balance   → current balance
+    email     → email address
+    createdAt → creation date/time (ISO 8601)
  **/
 public record Customer(
         String id,
-        String nome,
+        String name,
         String cpf,
         BigDecimal balance,
         String email,
-        String criadoEm
+        String createdAt
 ) {
 
-    public Customer(String nome, String cpf, BigDecimal balance, String email) {
-        this(null, nome, cpf, balance, email, null);
+    public Customer(String name, String cpf, BigDecimal balance, String email) {
+        this(null, name, cpf, balance, email, null);
     }
 
-    public Customer comIdEData(String id) {
-        String agora = LocalDateTime.now()
+    public Customer withIdAndDate(String id) {
+        String now = LocalDateTime.now()
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        return new Customer(id, this.nome, this.cpf, this.balance, this.email, agora);
+        return new Customer(id, this.name, this.cpf, this.balance, this.email, now);
     }
 }

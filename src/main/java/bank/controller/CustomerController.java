@@ -19,8 +19,8 @@ public class CustomerController {
     }
 
     /**
-     * Ponto de entrada: recebe qualquer requisição em /customers
-     * e despacha para o metodo correto baseado no metodo HTTP.
+     * Entry point: receives any request at /customers
+     * and dispatches to the correct method based on the HTTP method.
      */
     public void handle(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
@@ -33,31 +33,31 @@ public class CustomerController {
                 case "PUT"    -> handlePut(exchange, path);
                 case "DELETE" -> handleDelete(exchange, path);
                 default       -> Router.sendResponse(exchange, 405,
-                        "{\"erro\": \"Método não permitido: " + method + "\"}");
+                        "{\"error\": \"Method not allowed: " + method + "\"}");
             }
         } catch (IllegalArgumentException e) {
             Router.sendResponse(exchange, 400,
-                    "{\"erro\": \"" + e.getMessage() + "\"}");
+                    "{\"error\": \"" + e.getMessage() + "\"}");
         }
     }
 
-    // --- GET /customers  e  GET /customers/{id} ---
+    // --- GET /customers and GET /customers/{id} ---
     private void handleGet(HttpExchange exchange, String path) throws IOException {
         String id = extractId(path);
 
         if (id == null) {
-            // GET /customers → lista todos
-            List<Customer> todos = service.listarTodos();
-            Router.sendResponse(exchange, 200, JsonUtil.toJsonArray(todos));
+            // GET /customers → list all
+            List<Customer> all = service.findAll();
+            Router.sendResponse(exchange, 200, JsonUtil.toJsonArray(all));
         }
 
         else {
-            // GET /customers/{id} → busca por ID
-            service.buscarPorId(id).ifPresentOrElse(
-                    Customer -> {
+            // GET /customers/{id} → find by ID
+            service.findById(id).ifPresentOrElse(
+                    customer -> {
                         try {
                             Router.sendResponse(exchange, 200,
-                                    JsonUtil.toJson(Customer));
+                                    JsonUtil.toJson(customer));
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -65,7 +65,7 @@ public class CustomerController {
                     () -> {
                         try {
                             Router.sendResponse(exchange, 404,
-                                    "{\"erro\": \"Customer não encontrado\"}");
+                                    "{\"error\": \"Customer not found\"}");
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -79,15 +79,15 @@ public class CustomerController {
         String body = readBody(exchange);
         String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
         
-        Customer rascunho;
+        Customer draft;
         if (contentType != null && contentType.contains("application/x-www-form-urlencoded")) {
-            rascunho = JsonUtil.fromForm(body);
+            draft = JsonUtil.fromForm(body);
         } else {
-            rascunho = JsonUtil.fromJson(body);
+            draft = JsonUtil.fromJson(body);
         }
         
-        Customer criado = service.cadastrar(rascunho);
-        Router.sendResponse(exchange, 201, JsonUtil.toJson(criado));
+        Customer created = service.register(draft);
+        Router.sendResponse(exchange, 201, JsonUtil.toJson(created));
     }
 
     // --- PUT /customers/{id} ---
@@ -96,22 +96,22 @@ public class CustomerController {
 
         if (id == null) {
             Router.sendResponse(exchange, 400,
-                    "{\"erro\": \"ID é obrigatório na URL: PUT /customers/{id}\"}");
+                    "{\"error\": \"ID is required in URL: PUT /customers/{id}\"}");
             return;
         }
 
         String body = readBody(exchange);
         String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
 
-        Customer dados;
+        Customer data;
         if (contentType != null && contentType.contains("application/x-www-form-urlencoded")) {
-            dados = JsonUtil.fromForm(body);
+            data = JsonUtil.fromForm(body);
         } else {
-            dados = JsonUtil.fromJson(body);
+            data = JsonUtil.fromJson(body);
         }
 
-        Customer atualizado = service.atualizar(id, dados);
-        Router.sendResponse(exchange, 200, JsonUtil.toJson(atualizado));
+        Customer updated = service.update(id, data);
+        Router.sendResponse(exchange, 200, JsonUtil.toJson(updated));
     }
 
     // --- DELETE /customers/{id} ---
@@ -120,25 +120,25 @@ public class CustomerController {
 
         if (id == null) {
             Router.sendResponse(exchange, 400,
-                    "{\"erro\": \"ID é obrigatório na URL: DELETE /customers/{id}\"}");
+                    "{\"error\": \"ID is required in URL: DELETE /customers/{id}\"}");
             return;
         }
 
-        service.deletar(id);
+        service.delete(id);
         Router.sendResponse(exchange, 204, "");
     }
 
-    // --- Utilitários do Controller ---
+    // --- Controller Utilities ---
 
     /**
-     * Extrai o ID da URL.
+     * Extracts the ID from the URL.
      * "/customers"           → null
      * "/customers/"          → null
      * "/customers/abc-123"   → "abc-123"
      */
     private String extractId(String path) {
         String[] parts = path.split("/");
-        // "/customers/abc" → ["", "Customers", "abc"]
+        // "/customers/abc" → ["", "customers", "abc"]
 
         if (parts.length >= 3 && !parts[2].isBlank()) {
             return parts[2];
@@ -147,7 +147,7 @@ public class CustomerController {
     }
 
     /**
-     * Lê o corpo da requisição como String.
+     * Reads the request body as String.
      */
     private String readBody(HttpExchange exchange) throws IOException {
         try (InputStream is = exchange.getRequestBody()) {

@@ -11,30 +11,30 @@ public class CustomerRepository {
 
     private final Map<String, Customer> store = new ConcurrentHashMap<>();
 
-    public Customer salvar(Customer Customer) {
+    public Customer save(Customer Customer) {
         store.put(Customer.id(), Customer);
         return Customer;
     }
 
-    public Optional<Customer> buscarPorId(String id) {
+    public Optional<Customer> findById(String id) {
         return Optional.ofNullable(store.get(id));
     }
 
-    public Optional<Customer> buscarPorCpf(String cpf) {
+    public Optional<Customer> findByCpf(String cpf) {
         return store.values().stream()
                 .filter(c -> c.cpf().equals(cpf))
                 .findFirst();
     }
 
-    public List<Customer> listarTodos() {
+    public List<Customer> findAll() {
         return new ArrayList<>(store.values());
     }
 
-    public boolean deletar(String id) {
+    public boolean delete(String id) {
         return store.remove(id) != null;
     }
 
-    public boolean existePorId(String id) {
+    public boolean existsById(String id) {
         return store.containsKey(id);
     }
 }

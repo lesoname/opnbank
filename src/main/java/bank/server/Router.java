@@ -9,30 +9,29 @@ import java.nio.charset.StandardCharsets;
 
 public class Router implements HttpHandler {
 
-    private final CustomerController CustomerController;
+    private final CustomerController customerController;
 
-    public Router(CustomerController CustomerController) {
-        this.CustomerController = CustomerController;
+    public Router(CustomerController customerController) {
+        this.customerController = customerController;
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
-        String method = exchange.getRequestMethod();
 
         try {
-            // Rota: /customers e /customers/{id}
+            // Route: /customers and /customers/{id}
             if (path.equals("/customers") || path.startsWith("/customers/")) {
-                CustomerController.handle(exchange);
+                customerController.handle(exchange);
             } else {
                 sendResponse(exchange, 404,
-                        "{\"erro\": \"Rota não encontrada: " + path + "\"}");
+                        "{\"error\": \"Route not found: " + path + "\"}");
             }
         } catch (Exception e) {
-            System.err.println("Erro interno: " + e.getMessage());
+            System.err.println("Internal error: " + e.getMessage());
             e.printStackTrace();
             sendResponse(exchange, 500,
-                    "{\"erro\": \"Erro interno do servidor\"}");
+                    "{\"error\": \"Internal server error\"}");
         }
     }
 

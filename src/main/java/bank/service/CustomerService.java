@@ -15,87 +15,87 @@ public class CustomerService {
     }
 
     /**
-     * Cadastra um novo Customer.
+     * Registers a new Customer.
      *
-     * @param  rascunho  Customer sem id (vindo do JSON)
-     * @return           Customer com id e data preenchidos
-     * @throws IllegalArgumentException se dados forem inválidos
+     * @param  draft  Customer without id (from JSON)
+     * @return        Customer with id and date filled
+     * @throws IllegalArgumentException if data is invalid
      */
-    public Customer cadastrar(Customer rascunho) {
-        // Validações
-        validarCamposObrigatorios(rascunho);
-        validarCpfUnico(rascunho.cpf());
+    public Customer register(Customer draft) {
+        // Validations
+        validateRequiredFields(draft);
+        validateUniqueCpf(draft.cpf());
 
-        // Gera ID único e timestamp
+        // Generates unique ID and timestamp
         String id = UUID.randomUUID().toString();
-        Customer Customer = rascunho.comIdEData(id);
+        Customer customer = draft.withIdAndDate(id);
 
-        return repository.salvar(Customer);
+        return repository.save(customer);
     }
 
-    public Optional<Customer> buscarPorId(String id) {
-        return repository.buscarPorId(id);
+    public Optional<Customer> findById(String id) {
+        return repository.findById(id);
     }
 
-    public List<Customer> listarTodos() {
-        return repository.listarTodos();
+    public List<Customer> findAll() {
+        return repository.findAll();
     }
 
-    public Customer atualizar(String id, Customer dadosNovos) {
-        Customer existente = repository.buscarPorId(id)
+    public Customer update(String id, Customer newDetails) {
+        Customer existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Customer não encontrado: " + id));
+                        "Customer not found: " + id));
 
-        validarCamposObrigatorios(dadosNovos);
+        validateRequiredFields(newDetails);
 
-        // Se o CPF mudou, verifica se o novo CPF já não está em uso
-        if (!existente.cpf().equals(dadosNovos.cpf())) {
-            validarCpfUnico(dadosNovos.cpf());
+        // If CPF changed, check if the new CPF is already in use
+        if (!existing.cpf().equals(newDetails.cpf())) {
+            validateUniqueCpf(newDetails.cpf());
         }
 
-        // Cria novo objeto mantendo id e data originais
-        Customer atualizado = new Customer(
-                existente.id(),
-                dadosNovos.nome(),
-                dadosNovos.cpf(),
-                dadosNovos.balance(),
-                dadosNovos.email(),
-                existente.criadoEm()
+        // Create new object maintaining original id and date
+        Customer updated = new Customer(
+                existing.id(),
+                newDetails.name(),
+                newDetails.cpf(),
+                newDetails.balance(),
+                newDetails.email(),
+                existing.createdAt()
         );
 
-        return repository.salvar(atualizado);
+        return repository.save(updated);
     }
 
-    public boolean deletar(String id) {
-        if (!repository.existePorId(id)) {
+    public boolean delete(String id) {
+        if (!repository.existsById(id)) {
             throw new IllegalArgumentException(
-                    "Customer não encontrado: " + id);
+                    "Customer not found: " + id);
         }
-        return repository.deletar(id);
+        return repository.delete(id);
     }
 
-    // --- Métodos privados de validação ---
+    // --- Private validation methods ---
 
-    private void validarCamposObrigatorios(Customer c) {
-        if (c.nome() == null || c.nome().isBlank()) {
-            throw new IllegalArgumentException("O campo 'nome' é obrigatório");
+    private void validateRequiredFields(Customer c) {
+        if (c.name() == null || c.name().isBlank()) {
+            throw new IllegalArgumentException("Field 'name' is required");
         }
         if (c.cpf() == null || c.cpf().isBlank()) {
-            throw new IllegalArgumentException("O campo 'cpf' é obrigatório");
+            throw new IllegalArgumentException("Field 'cpf' is required");
         }
         if (c.email() == null || c.email().isBlank()) {
-            throw new IllegalArgumentException("O campo 'email' é obrigatório");
+            throw new IllegalArgumentException("Field 'email' is required");
         }
         if (!c.cpf().matches("\\d{11}")) {
             throw new IllegalArgumentException(
-                    "CPF deve conter exatamente 11 dígitos numéricos");
+                    "CPF must contain exactly 11 numeric digits");
         }
     }
 
-    private void validarCpfUnico(String cpf) {
-        if (repository.buscarPorCpf(cpf).isPresent()) {
+    private void validateUniqueCpf(String cpf) {
+        if (repository.findByCpf(cpf).isPresent()) {
             throw new IllegalArgumentException(
-                    "Já existe um Customer com o CPF: " + cpf);
+                    "A Customer with CPF " + cpf + " already exists");
         }
     }
 }

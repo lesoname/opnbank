@@ -15,66 +15,66 @@ import java.util.stream.Collectors;
 public class JsonUtil {
 
     /**
-     * Converte um Customer para uma String JSON.
+     * Converts a Customer to a JSON String.
      *
-     * Exemplo de saída:
+     * Output example:
      * {
      *   "id": "abc-123",
-     *   "nome": "Leonardo",
+     *   "name": "Leonardo",
      *   "cpf": "12345678901",
      *   "balance": "212,00"
      *   "email": "leo@email.com",
-     *   "criadoEm": "2025-01-15T10:30:00"
+     *   "createdAt": "2025-01-15T10:30:00"
      * }
      */
     public static String toJson(Customer c) {
         return """
             {
               "id": %s,
-              "nome": %s,
+              "name": %s,
               "cpf": %s,
               "balance": %s,
               "email": %s,
-              "criadoEm": %s
+              "createdAt": %s
             }""".formatted(
                 quote(c.id()),
-                quote(c.nome()),
+                quote(c.name()),
                 quote(c.cpf()),
                 quote(String.valueOf(c.balance())),
                 quote(c.email()),
-                quote(c.criadoEm())
+                quote(c.createdAt())
         );
     }
 
     /**
-     * Converte uma lista de Customers para um JSON array.
+     * Converts a list of Customers to a JSON array.
      */
-    public static String toJsonArray(List<Customer> Customers) {
-        String items = Customers.stream()
+    public static String toJsonArray(List<Customer> customers) {
+        String items = customers.stream()
                 .map(JsonUtil::toJson)
                 .collect(Collectors.joining(","));
         return "[" + items + "]";
     }
 
     /**
-     * Deserializa um JSON para um Customer.
+     * Deserializes a JSON to a Customer.
      *
-     * Estratégia: buscar cada campo manualmente.
-     * Sim, é manual. Sim, funciona. Sim, é proposital.
+     * Strategy: find each field manually.
+     * Yes, it is manual. Yes, it works. Yes, it is intentional.
      */
     public static Customer fromJson(String json) {
-        String nome         = extractField(json, "nome");
+        String name         = extractField(json, "name");
         String cpf          = extractField(json, "cpf");
         String balanceStr      = extractField(json, "balance");
         BigDecimal balance  = (balanceStr != null && !balanceStr.isEmpty())
                                                     ? new BigDecimal(balanceStr)
                                                     : BigDecimal.ZERO;
         String email        = extractField(json, "email");
-        return new Customer(nome, cpf, balance, email);
+        return new Customer(name, cpf, balance, email);
     }
 
     /**
-     * Deserializa um formulário (x-www-form-urlencoded) para um Customer.
+     * Deserializes a form (x-www-form-urlencoded) to a Customer.
      */
     public static Customer fromForm(String body) {
         Map<String, String> params = new HashMap<>();
@@ -92,18 +92,18 @@ public class JsonUtil {
                 : BigDecimal.ZERO;
 
         return new Customer(
-                params.get("nome"),
+                params.get("name"),
                 params.get("cpf"),
                 balance,
                 params.get("email")
         );
     }
 
-    // --- Métodos auxiliares ---
+    // --- Helper methods ---
 
     /**
-     * Extrai o valor de um campo JSON simples.
-     * Procura o padrão "campo": "valor" e retorna "valor".
+     * Extracts the value of a simple JSON field.
+     * Looks for the pattern "field": "value" and returns "value".
      */
     private static String extractField(String json, String field) {
         // Padrão que aceita:
